@@ -11,6 +11,13 @@
 
 using namespace std;
 
+template<typename T>
+vector<T>clearVector(vector<T>& vec)
+{
+    vec.clear();
+    return vec;
+}
+
 int manageMood(const string& user_input, int currentMood)
 {
     int decreaseMultiplier = 20; // 20% decrease for each word in all caps
@@ -303,13 +310,14 @@ int comparePattern(const vector<int>& row)
     return pattern;
 }
 
-vector<string> botresponse(int pattern, const string& user_name, const vector<vector<string>>& sentences) // it is not finished yet
+vector<string> botresponse(int pattern, const string& user_name, const vector<vector<string>>& sentences)
 {
     vector<string> response;
 
     for (const auto& sentence : sentences)
     {
         vector<string> rearrangedSentence(sentence.size()); // Initialize a vector to store the rearranged sentence
+        string rearrangedStr; // Move the string inside the loop
 
         switch(pattern)
         {
@@ -317,80 +325,100 @@ vector<string> botresponse(int pattern, const string& user_name, const vector<ve
                 response.push_back("Sorry to tell you man, but I don't understand what you typed");
                 break;
             case 1:
-                // Rearrange the words in the sentence based on the specified pattern
                 rearrangedSentence[0] = sentence[1];
                 rearrangedSentence[1] = sentence[0];
-                
-                for ( int word = 2; word < sentence.size(); word++)
+                for (size_t word = 2; word < sentence.size(); ++word)
                 {
                     rearrangedSentence[word] = sentence[word];
                 }
+
+                for (const auto& word : rearrangedSentence)
+                {
+                    rearrangedStr += word + " "; // Concatenate each word inside the loop
+                }
+                response.push_back(rearrangedStr);
+                rearrangedStr="";
                 break;
             case 2:
                 rearrangedSentence[0] = sentence[1];
                 rearrangedSentence[1] = sentence[0];
-                
-                for ( int word = 1; word < sentence.size(); ++word)
+                for (size_t word = 2; word < sentence.size(); ++word)
                 {
                     rearrangedSentence[word] = sentence[word];
                 }
+
+                for (const auto& word : rearrangedSentence)
+                {
+                    rearrangedStr += word + " "; // Concatenate each word inside the loop
+                }
+                response.push_back(rearrangedStr);
+                rearrangedStr="";
                 break;
             case 3:
                 rearrangedSentence[0] = sentence[1];
                 rearrangedSentence[1] = sentence[0];
-                
-                for ( int word = 1; word < sentence.size(); ++word)
+                for (size_t word = 2; word < sentence.size(); ++word)
                 {
                     rearrangedSentence[word] = sentence[word];
                 }
+
+                for (const auto& word : rearrangedSentence)
+                {
+                    rearrangedStr += word + " "; // Concatenate each word inside the loop
+                }
+                response.push_back(rearrangedStr);
+                rearrangedStr="";
                 break;
             case 4:
                 rearrangedSentence[0] = sentence[1];
                 rearrangedSentence[1] = sentence[0];
-                
-                for ( int word = 1; word < sentence.size(); ++word)
+                for (size_t word = 2; word < sentence.size(); ++word)
                 {
                     rearrangedSentence[word] = sentence[word];
                 }
+
+                for (const auto& word : rearrangedSentence)
+                {
+                    rearrangedStr += word + " "; // Concatenate each word inside the loop
+                }
+                response.push_back(rearrangedStr);
+                rearrangedStr="";
                 break;
             default:
                 response.push_back("I'm not sure how to respond to that.");
                 break;
         }
-
-        // Convert the rearranged sentence vector to a string and push it to the response vector
-        string rearrangedStr;
-        for (const auto& word : rearrangedSentence) {
-            rearrangedStr += word + " ";
-        }
-        response.push_back(rearrangedStr);
     }
 
     return response;
 }
 
 
-void BotRunner(string& user_input, vector<vector<string>>& allverbVectors, const string& user_name)
+
+void BotRunner(vector<vector<string>>& allverbVectors, const string& user_name)
 {
     //srand(static_cast<unsigned>(time(0)));
 
     //unordered_map<string, string> userProfile;
+    string user_input;
     string temp_string;
+    string vectorNames[] = {"sentences", "formattedOutput", "result", "arrPattern", "arrPattern", "response"};
+
 
     vector<vector<string>> sentences;
-
+    vector<vector<int>> formattedOutput;
+    vector<int> result;
     vector<int> arrPattern;
+    vector<string> response;
 
     bool endConversation = false;
     bool current_speaker = false;
+    
     while(true)
     {
+
         if(!current_speaker)
         {
-
-            //function that uses switch case to generate from int pattern to answer
-
-
             // bot mechanics
             if(endConversation == true)
             {
@@ -398,21 +426,31 @@ void BotRunner(string& user_input, vector<vector<string>>& allverbVectors, const
                 break;
             }
 
-            for (const auto& row : arrPattern)
+            for (const auto& pattern : arrPattern)
             {
-                vector<string> response = botresponse(row, user_name, sentences);
+                response = botresponse(pattern, user_name, sentences);
 
                 for (const auto& resp : response)
                 {
-                    cout << "Xenon > " << resp << " ";
+                    cout << "Xenon > " << resp + " " << endl;
                     temp_string += resp + " ";
                 }
-                cout << endl;
-
-                writeToFile(temp_string, user_name);
             }
 
+            // Write the entire conversation to the file
+            writeToFile(temp_string, user_name);
+
             current_speaker = true;
+
+            // Clear the contents of vectors based on their names in the array
+            clearVector(formattedOutput);
+            clearVector(response);
+            clearVector(result);
+            clearVector(arrPattern);
+            clearVector(sentences);
+
+            temp_string.clear();
+            user_input.clear();
         }
         else if(current_speaker)
         {
@@ -426,35 +464,21 @@ void BotRunner(string& user_input, vector<vector<string>>& allverbVectors, const
             transform(user_input.begin(), user_input.end(), user_input.begin(), ::tolower);
             
             sentences = convertToSentences(user_input);
-
             
-            vector<int> result = compareAndOutput(sentences, allverbVectors);
-
+            result = compareAndOutput(sentences, allverbVectors);
 
             // Format the output with new lines for each sentence
-            vector<vector<int>> formattedOutput = formatOutput(result);
-
-            cout << "Formatted Output: " << endl;
-            for (const auto& row : formattedOutput)
-            {
-                for (int val : row)
-                {
-                    cout << val << " ";
-                }
-                cout << endl;
-            }
+            formattedOutput = formatOutput(result);
 
             // Split the formatted output into lines and compare each line with specific patterns
-            cout << "Patterns matched: " << endl;
             for (const auto& row : formattedOutput)
             {
                 int pattern = comparePattern(row);
-                cout << pattern << " ";
                 arrPattern.push_back(pattern);
             }
-            cout << endl;
 
-            if(endConversation == false && user_input == "bye")
+            // Check if the user wants to end the conversation
+            if (endConversation == false && user_input == "bye")
             {
                 endConversation = true; // end conversation
             }
